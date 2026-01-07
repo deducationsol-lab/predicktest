@@ -5,74 +5,306 @@ import uuid
 import pandas as pd
 import plotly.express as px
 import hashlib
+import json
+import base64
 
 # Page config
-st.set_page_config(page_title="Meme-DICKTOR", page_icon="🤡", layout="wide")
+st.set_page_config(page_title="PRE-DICKTOR", page_icon="🍆", layout="wide")
 
-# Super meme theme
+# High-tech neon dark theme
 st.markdown("""
 <style>
-    .stApp { background: linear-gradient(#000, #110033); color: #ff00ff; }
+    .stApp { background: #000000; color: #e0ffe0; }
     .big-title {
-        font-size: 6rem !important;
+        font-size: 5.5rem !important;
+        font-weight: 900;
         text-align: center;
-        background: linear-gradient(90deg, #ff00ff, #00ff00, #ffff00, #ff00ff);
+        background: linear-gradient(90deg, #39ff14, #ff00ff, #00ffff, #39ff14);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
-        animation: rave 2s infinite;
+        animation: neon-pulse 3s ease-in-out infinite alternate;
+        text-shadow: 0 0 20px #39ff14;
     }
-    @keyframes rave { 0% { filter: hue-rotate(0deg); } 100% { filter: hue-rotate(360deg); } }
-    .subtitle { font-size: 2rem; text-align: center; color: #00ff00; }
+    @keyframes neon-pulse {
+        from { text-shadow: 0 0 10px #39ff14, 0 0 20px #39ff14; }
+        to { text-shadow: 0 0 20px #ff00ff, 0 0 40px #ff00ff; }
+    }
+    .subtitle { font-size: 2.2rem; text-align: center; color: #ff00ff; text-shadow: 0 0 15px #ff00ff; }
     .stButton > button {
-        background: #ff00ff; color: black; font-weight: bold; border-radius: 50px; padding: 20px;
-        box-shadow: 0 0 30px #ff00ff;
+        background: linear-gradient(45deg, #001a00, #1a0033);
+        color: #39ff14;
+        border: 2px solid #39ff14;
+        border-radius: 15px;
+        padding: 15px 30px;
+        font-size: 1.3rem;
+        font-weight: bold;
+        box-shadow: 0 0 25px rgba(57, 255, 20, 0.6);
+    }
+    .stButton > button:hover {
+        box-shadow: 0 0 40px rgba(255, 0, 255, 0.8);
+        transform: translateY(-3px);
     }
     .market-card {
-        background: #111; border: 5px dashed #00ff00; border-radius: 30px; padding: 40px; margin: 40px 0;
-        box-shadow: 0 0 50px #ff00ff;
+        background: rgba(10, 10, 30, 0.8);
+        border: 3px solid #ff00ff;
+        border-radius: 20px;
+        padding: 30px;
+        margin: 30px 0;
+        box-shadow: 0 0 30px rgba(255, 0, 255, 0.5);
+    }
+    .share-btn {
+        background: linear-gradient(45deg, #ff00ff, #8000ff);
+        color: white;
+        border: none;
+        padding: 12px 25px;
+        border-radius: 50px;
+        font-weight: bold;
+        box-shadow: 0 0 25px #ff00ff;
+    }
+    .beta-badge {
+        background: #ff00ff;
+        color: black;
+        padding: 10px 20px;
+        border-radius: 50px;
+        font-weight: bold;
+        box-shadow: 0 0 20px #ff00ff;
+        display: inline-block;
+        margin: 10px 0;
+    }
+    .history-card {
+        background: rgba(0, 20, 20, 0.7);
+        border: 3px solid #39ff14;
+        border-radius: 20px;
+        padding: 20px;
+        margin: 20px 0;
     }
 </style>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@800&display=swap" rel="stylesheet">
 """, unsafe_allow_html=True)
 
+# BETA BADGE
+st.markdown("<div class='beta-badge'>BETA TESTING – PHANTOM WALLET REQUIRED</div>", unsafe_allow_html=True)
+
+# === GITHUB SHARED STORAGE ===
+GITHUB_TOKEN = st.secrets["GITHUB_TOKEN"]
+DATA_REPO = st.secrets["DATA_REPO"]
+DATA_FILE = "markets.json"
+
+def load_markets():
+    url = f"https://api.github.com/repos/{DATA_REPO}/contents/{DATA_FILE}"
+    headers = {"Authorization": f"token {GITHUB_TOKEN}", "Accept": "application/vnd.github.v3+json"}
+    try:
+        r = requests.get(url, headers=headers)
+        r.raise_for_status()
+        content = r.json()["content"]
+        decoded = base64.b64decode(content).decode('utf-8')
+        return json.loads(decoded)
+    except:
+        return []
+
+def save_markets(markets):
+    url = f"https://api.github.com/repos/{DATA_REPO}/contents/{DATA_FILE}"
+    headers = {"Authorization": f"token {GITHUB_TOKEN}", "Accept": "application/vnd.github.v3+json"}
+    r = requests.get(url, headers=headers)
+    sha = r.json().get("sha")
+    content = base64.b64encode(json.dumps(markets, indent=2).encode()).decode()
+    data = {
+        "message": "Update markets",
+        "content": content,
+        "sha": sha
+    }
+    requests.put(url, json=data, headers=headers)
+
+markets = load_markets()
+
+# === SECURE ADMIN PASSWORD ===
+EXPECTED_HASH = "6645adc23275824958437afdcc809d3027c4f772ee65ebd26846e943e6209437"
+
+def check_admin_password(pwd: str) -> bool:
+    return hashlib.sha256(pwd.encode()).hexdigest() == EXPECTED_HASH
+
+# Disclaimer
+if 'disclaimer_accepted' not in st.session_state:
+    st.session_state.disclaimer_accepted = False
+
+if not st.session_state.disclaimer_accepted:
+    st.markdown("""
+    <div style='background:rgba(20,0,40,0.8);padding:50px;border-radius:20px;border:4px dashed #39ff14;text-align:center;box-shadow:0 0 40px rgba(57,255,20,0.4);max-width:800px;margin:auto'>
+        <h1 style='color:#ff00ff'>🔴 ACCESS RESTRICTED 🔴</h1>
+        <h2 style='color:#39ff14'>PRE-DICKTOR v2.0 ONLINE</h2>
+        <p style='font-size:1.6rem;color:#b0ffb0'>
+            NOT financial advice. Extreme volatility zone.<br>
+            You may lose all funds instantly.<br>
+            Only risk what you can afford to lose.
+        </p>
+    </div>
+    """, unsafe_allow_html=True)
+    col1, col2 = st.columns(2)
+    with col1:
+        if st.button("EXIT", type="secondary", use_container_width=True):
+            st.stop()
+    with col2:
+        if st.button("ENTER MATRIX – I ACCEPT RISKS", type="primary", use_container_width=True):
+            st.session_state.disclaimer_accepted = True
+            st.balloons()
+            st.rerun()
+    st.stop()
+
 # Title
-st.markdown('<h1 class="big-title">Meme-DICKTOR</h1>', unsafe_allow_html=True)
-st.markdown('<p class="subtitle">The Ultimate Prediction Market for X Memes & Viral Trends 🤡🗳️</p>', unsafe_allow_html=True)
-st.markdown("<p style='text-align:center;font-size:2rem'>Bet on what goes viral next. Powered by degen energy!</p>", unsafe_allow_html=True)
+st.markdown('<h1 class="big-title">PRE-DICKTOR</h1>', unsafe_allow_html=True)
+st.markdown('<p class="subtitle">Community Voting Matrix | Powered by $DEDU 🗳️🍆</p>', unsafe_allow_html=True)
 
-# Wallet & Disclaimer (same as before)
+# Wallet Connect
+if 'wallet' not in st.session_state:
+    st.session_state.wallet = None
 
-# Meme Markets – Funny X Trend Examples
-markets = [
-    {"question": "Which animal meme wins January 2026?", "options": ["Cats 😹", "Dogs 🐶", "Frogs 🐸", "Birds 🐦", "Others 🦝"], "votes": {"Cats 😹": 0, "Dogs 🐶": 0, "Frogs 🐸": 0, "Birds 🐦": 0, "Others 🦝": 0}},
-    {"question": "Will 'Skibidi Toilet' still be trending in Feb?", "options": ["Yes 🚽", "No 🪦", "Brainrot forever 🧠"], "votes": {"Yes 🚽": 0, "No 🪦": 0, "Brainrot forever 🧠": 0}},
-    {"question": "Next big X trend format?", "options": ["AI Slop 🤖", "Cat Videos 😻", "Ratio Wars ⚔️", "Wholesome Memes 🥹"], "votes": {"AI Slop 🤖": 0, "Cat Videos 😻": 0, "Ratio Wars ⚔️": 0, "Wholesome Memes 🥹": 0}},
-    {"question": "Most viral meme sound 2026?", "options": ["Ohio Rizz 🎶", "Skibidi Dop 🎵", "New Brainrot 🔄", "Classic Vine 🧓"], "votes": {"Ohio Rizz 🎶": 0, "Skibidi Dop 🎵": 0, "New Brainrot 🔄": 0, "Classic Vine 🧓": 0}},
-    {"question": "Will 'Hawk Tuah' girl return in 2026?", "options": ["Yes spit on that thang 👅", "No she's gone 😢", "New version drops 🔥"], "votes": {"Yes spit on that thang 👅": 0, "No she's gone 😢": 0, "New version drops 🔥": 0}},
-]
+col1, col2, col3 = st.columns([1,2,1])
+with col2:
+    if st.button("🔗 CONNECT PHANTOM WALLET", use_container_width=True):
+        st.markdown("""
+        <script src="https://unpkg.com/@solana/web3.js@latest/lib/index.iife.min.js"></script>
+        <script>
+        async function connect() {
+            if (window.solana && window.solana.isPhantom) {
+                try {
+                    const resp = await window.solana.connect();
+                    window.parent.location = window.parent.location.href.split('?')[0] + '?wallet=' + resp.publicKey.toString();
+                } catch (err) {
+                    alert("Connection failed");
+                }
+            } else {
+                alert("Install Phantom wallet!");
+            }
+        }
+        connect();
+        </script>
+        """, unsafe_allow_html=True)
 
-# Display funny markets
-for market in markets:
-    with st.container():
-        st.markdown("<div class='market-card'>", unsafe_allow_html=True)
-        st.markdown(f"<h2 style='text-align:center'>{market['question']}</h2>", unsafe_allow_html=True)
+if st.session_state.wallet:
+    st.success(f"🟢 CONNECTED: {st.session_state.wallet}")
 
-        total = sum(market['votes'].values())
-        cols = st.columns(len(market['options']))
-        for idx, opt in enumerate(market['options']):
-            with cols[idx]:
-                perc = (market['votes'][opt] / total * 100) if total > 0 else 0
-                st.markdown(f"<h3 style='text-align:center'>{opt}<br>{perc:.1f}%</h3>", unsafe_allow_html=True)
-                if st.button(f"BET ON {opt}", key=f"bet_{market['question']}_{opt}", use_container_width=True):
-                    market['votes'][opt] += 1
-                    st.success(f"You bet on {opt}! De gen move 😈")
+# Live Prices
+st.markdown("<h2 style='text-align:center;color:#ff00ff'>📊 LIVE FEED</h2>", unsafe_allow_html=True)
+try:
+    prices = requests.get("https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,solana,binancecoin&vs_currencies=usd", timeout=10).json()
+    cols = st.columns(4)
+    cols[0].metric("BTC", f"${prices.get('bitcoin',{}).get('usd','N/A'):,}")
+    cols[1].metric("ETH", f"${prices.get('ethereum',{}).get('usd','N/A'):,}")
+    cols[2].metric("SOL", f"${prices.get('solana',{}).get('usd','N/A'):,}")
+    cols[3].metric("BNB", f"${prices.get('binancecoin',{}).get('usd','N/A'):,}")
+except:
+    st.warning("Price feed temporarily rugged 😅 Check CoinGecko")
+
+# $DEDU Token Hub
+st.markdown("<div class='dedu-card'>", unsafe_allow_html=True)
+st.markdown("<h2 style='color:#39ff14'>💜 $DEDU TOKEN HUB</h2>", unsafe_allow_html=True)
+st.markdown("<p style='font-size:1.5rem;color:#ff00ff'>Contract: <code>AqDGzh4jRZipMrkBuekDXDB1Py2huA8G5xCvrSgmpump</code></p>", unsafe_allow_html=True)
+
+# $DEDU Chart
+dedu_df = pd.DataFrame({
+    'Date': pd.date_range(start='2026-01-01', periods=15).strftime('%m-%d'),
+    'Price (USD)': [0.0000048, 0.0000050, 0.0000051, 0.0000052, 0.0000051, 0.0000053, 0.0000054, 0.0000053, 0.0000053, 0.0000053, 0.0000053, 0.0000053, 0.0000053, 0.0000053, 0.0000053],
+    'Holders': [20, 22, 25, 27, 29, 31, 32, 33, 34, 35, 35, 35, 35, 35, 35]
+})
+fig_dedu = px.line(dedu_df, x='Date', y=['Price (USD)', 'Holders'],
+                   color_discrete_map={'Price (USD)': '#ff00ff', 'Holders': '#39ff14'})
+fig_dedu.update_layout(plot_bgcolor='rgba(0,0,0,0)', paper_bgcolor='rgba(0,0,0,0)', font_color='#e0ffe0')
+st.plotly_chart(fig_dedu, use_container_width=True)
+
+st.markdown("<p style='font-size:1.6rem;color:#39ff14'>Buy $DEDU now to vote and ride the wave! 🚀</p>", unsafe_allow_html=True)
+
+# Swap Widget
+st.markdown("<h3 style='color:#ff00ff'>SWAP → $DEDU</h3>", unsafe_allow_html=True)
+st.markdown(f"""
+<jupiter-widget input-mint="So11111111111111111111111111111111111111112" output-mint="AqDGzh4jRZipMrkBuekDXDB1Py2huA8G5xCvrSgmpump" amount="500000000"></jupiter-widget>
+<script type="module" src="https://unpkg.com/@jup-ag/widget-embedded@latest"></script>
+""", unsafe_allow_html=True)
+st.markdown("</div>", unsafe_allow_html=True)
+
+# Markets
+if 'markets' not in st.session_state:
+    st.session_state.markets = []
+
+# Funny chart data
+def get_market_chart_data(votes_dict):
+    num_days = 30
+    dates = pd.date_range(end=datetime.today(), periods=num_days).strftime('%m-%d')
+    df = pd.DataFrame({'Date': dates})
+    for option, base in votes_dict.items():
+        growth = [base + i*50 for i in range(num_days)]
+        df[f"{option} 🔥"] = growth
+    return df
+
+# Admin with secure password
+with st.sidebar:
+    st.markdown("### 🔐 ADMIN ACCESS")
+    pwd = st.text_input("Password", type="password")
+    if check_admin_password(pwd):
+        st.success("🔓 Access Granted")
+        with st.form("create_market"):
+            question = st.text_input("Question", "Which meme will dominate 2026?")
+            options_input = st.text_area("Answers (one per line)", "BONK 🐶\nWIF 🧢\nPEPE 🐸\nPOPCAT 😼")
+            date = st.date_input("Voting Ends")
+            submitted = st.form_submit_button("🚀 LAUNCH")
+            if submitted:
+                options = [o.strip() for o in options_input.split('\n') if o.strip()]
+                if len(options) < 2:
+                    st.error("Need 2+ options")
+                else:
+                    st.session_state.markets.append({
+                        "id": str(uuid.uuid4()),
+                        "question": question,
+                        "options": options,
+                        "votes": {opt: 0 for opt in options},
+                        "resolution_date": str(date),
+                        "resolved": False
+                    })
+                    st.success("Voting live!")
                     st.balloons()
 
-        st.markdown("</div>", unsafe_allow_html=True)
+# Display markets
+st.markdown("<h2 style='text-align:center;color:#ff00ff'>🗳️ ACTIVE VOTING BATTLES</h2>", unsafe_allow_html=True)
+
+if not st.session_state.markets:
+    st.info("No battles yet. Admin loading...")
+else:
+    for market in st.session_state.markets:
+        with st.container():
+            st.markdown("<div class='market-card'>", unsafe_allow_html=True)
+            st.markdown(f"<h3 style='text-align:center;color:#00ffff'>{market['question']}</h3>", unsafe_allow_html=True)
+            st.markdown(f"<p style='text-align:center;color:#ff00ff'>Ends: {market['resolution_date']}</p>", unsafe_allow_html=True)
+
+            # Multi-line chart
+            chart_df = get_market_chart_data(market['votes'])
+            fig = px.line(chart_df, x='Date', y=chart_df.columns[1:])
+            fig.update_layout(plot_bgcolor='rgba(0,0,0,0)', paper_bgcolor='rgba(0,0,0,0)', font_color='#e0ffe0', legend_title="Option")
+            st.plotly_chart(fig, use_container_width=True)
+
+            total = sum(market['votes'].values())
+            cols = st.columns(len(market['options']))
+            for idx, opt in enumerate(market['options']):
+                with cols[idx]:
+                    perc = (market['votes'][opt] / total * 100) if total > 0 else 0
+                    st.markdown(f"<h2 style='text-align:center;color:#39ff14'>{opt}<br>{perc:.1f}%</h2>", unsafe_allow_html=True)
+                    if st.button(f"🗳️ VOTE {opt}", key=f"vote_{market['id']}_{idx}", use_container_width=True):
+                        if st.session_state.wallet:
+                            market['votes'][opt] += 1
+                            st.success(f"Voted {opt}! 🔥")
+                            st.balloons()
+                        else:
+                            st.warning("Connect Phantom wallet to vote")
+
+            # Share
+            share_text = f"Pre-DICKTOR Vote: {market['question']} | Join now! 🗳️🍆"
+            twitter_url = f"https://twitter.com/intent/tweet?text={requests.utils.quote(share_text)}"
+            st.markdown(f'<a href="{twitter_url}" target="_blank"><button class="share-btn" style="width:100%;margin-top:20px">📤 SHARE BATTLE</button></a>', unsafe_allow_html=True)
+
+            st.markdown("</div>", unsafe_allow_html=True)
 
 # Footer
 st.markdown("""
-<div style='text-align:center;padding:50px'>
-    <h2>Meme-DICKTOR – Where X Trends Become Money 🤡💰</h2>
-    <p>No financial advice. Just pure degen fun.</p>
+<div style='text-align:center;margin-top:60px;padding:40px;background:rgba(0,10,30,0.6);border:2px solid #39ff14;border-radius:20px'>
+    <h2 style='color:#ff00ff'>PRE-DICKTOR v2.0</h2>
+    <p style='color:#39ff14'>$DEDU Powered | Community Votes | WAGMI 🗳️🍆</p>
 </div>
 """, unsafe_allow_html=True)
