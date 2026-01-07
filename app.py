@@ -5,10 +5,9 @@ import uuid
 import pandas as pd
 import plotly.express as px
 import hashlib
-import random
 
 # Page config
-st.set_page_config(page_title="Pre-DICKTOR", page_icon="🍆", layout="wide")
+st.set_page_config(page_title="Pre-DICKTOR Beta", page_icon="🍆", layout="wide")
 
 # High-tech neon dark theme
 st.markdown("""
@@ -60,13 +59,15 @@ st.markdown("""
         font-weight: bold;
         box-shadow: 0 0 25px #ff00ff;
     }
-    .dedu-card {
-        background: rgba(20, 0, 40, 0.7);
-        border: 4px solid #39ff14;
-        border-radius: 20px;
-        padding: 30px;
-        text-align: center;
-        box-shadow: 0 0 40px rgba(57, 255, 20, 0.4);
+    .beta-badge {
+        background: #ff00ff;
+        color: black;
+        padding: 10px 20px;
+        border-radius: 50px;
+        font-weight: bold;
+        box-shadow: 0 0 20px #ff00ff;
+        display: inline-block;
+        margin: 10px 0;
     }
 </style>
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@800&display=swap" rel="stylesheet">
@@ -78,6 +79,9 @@ EXPECTED_HASH = "6645adc23275824958437afdcc809d3027c4f772ee65ebd26846e943e620943
 def check_admin_password(pwd: str) -> bool:
     return hashlib.sha256(pwd.encode()).hexdigest() == EXPECTED_HASH
 
+# BETA TESTING MODE
+st.markdown("<div class='beta-badge'>BETA TESTING MODE – SIMULATOR ACTIVE</div>", unsafe_allow_html=True)
+
 # Disclaimer
 if 'disclaimer_accepted' not in st.session_state:
     st.session_state.disclaimer_accepted = False
@@ -85,21 +89,21 @@ if 'disclaimer_accepted' not in st.session_state:
 if not st.session_state.disclaimer_accepted:
     st.markdown("""
     <div style='background:rgba(20,0,40,0.8);padding:50px;border-radius:20px;border:4px dashed #39ff14;text-align:center;box-shadow:0 0 40px rgba(57,255,20,0.4);max-width:800px;margin:auto'>
-        <h1 style='color:#ff00ff'>🔴 ACCESS RESTRICTED 🔴</h1>
-        <h2 style='color:#39ff14'>PRE-DICKTOR v2.0 ONLINE</h2>
+        <h1 style='color:#ff00ff'>🔴 BETA ACCESS</h1>
+        <h2 style='color:#39ff14'>PRE-DICKTOR BETA SIMULATOR</h2>
         <p style='font-size:1.6rem;color:#b0ffb0'>
-            NOT financial advice. Extreme volatility zone.<br>
-            You may lose all funds instantly.<br>
-            Only risk what you can afford to lose.
+            This is a BETA test with simulated $DEDU.<br>
+            No real money involved. For testing only.<br>
+            Have fun and break things! 😏
         </p>
     </div>
     """, unsafe_allow_html=True)
     col1, col2 = st.columns(2)
     with col1:
-        if st.button("EXIT", type="secondary", use_container_width=True):
+        if st.button("EXIT BETA", type="secondary", use_container_width=True):
             st.stop()
     with col2:
-        if st.button("ENTER MATRIX – I ACCEPT RISKS", type="primary", use_container_width=True):
+        if st.button("ENTER BETA SIMULATOR", type="primary", use_container_width=True):
             st.session_state.disclaimer_accepted = True
             st.balloons()
             st.rerun()
@@ -107,100 +111,87 @@ if not st.session_state.disclaimer_accepted:
 
 # Title
 st.markdown('<h1 class="big-title">Pre-DICKTOR</h1>', unsafe_allow_html=True)
-st.markdown('<p class="subtitle">Community Voting Matrix | Powered by $DEDU 🗳️🍆</p>', unsafe_allow_html=True)
+st.markdown('<p class="subtitle">Beta Voting Simulator | 1,000,000 Simulated $DEDU per user 🗳️🍆</p>', unsafe_allow_html=True)
 
-# Wallet Connect
-if 'wallet' not in st.session_state:
-    st.session_state.wallet = None
+# User Registration for Beta Testing
+if 'user_id' not in st.session_state:
+    st.session_state.user_id = None
+    st.session_state.sim_dedu_balance = 0
+    st.session_state.votes_cast = 0
 
-col1, col2, col3 = st.columns([1,2,1])
-with col2:
-    if st.button("🔗 CONNECT PHANTOM WALLET", use_container_width=True):
-        st.markdown("""
-        <script src="https://unpkg.com/@solana/web3.js@latest/lib/index.iife.min.js"></script>
-        <script>
-        async function connect() {
-            if (window.solana && window.solana.isPhantom) {
-                try {
-                    const resp = await window.solana.connect();
-                    window.parent.location = window.parent.location.href.split('?')[0] + '?wallet=' + resp.publicKey.toString();
-                } catch (err) {
-                    alert("Connection failed");
-                }
-            } else {
-                alert("Install Phantom wallet!");
-            }
-        }
-        connect();
-        </script>
-        """, unsafe_allow_html=True)
+if st.session_state.user_id is None:
+    st.markdown("<h3 style='color:#39ff14;text-align:center'>REGISTER FOR BETA TESTING</h3>", unsafe_allow_html=True)
+    username = st.text_input("Choose a Degen Name")
+    if st.button("JOIN BETA – GET 1,000,000 SIMULATED $DEDU"):
+        if username:
+            st.session_state.user_id = str(uuid.uuid4())[:8]
+            st.session_state.username = username
+            st.session_state.sim_dedu_balance = 1000000  # 1 million simulated $DEDU
+            st.session_state.votes_cast = 0
+            st.success(f"Welcome {username}! You received 1,000,000 simulated $DEDU")
+            st.balloons()
+            st.rerun()
+        else:
+            st.warning("Enter a name!")
 
-if st.session_state.wallet:
-    st.success(f"🟢 CONNECTED: {st.session_state.wallet}")
+# Show user info
+if st.session_state.user_id:
+    st.sidebar.markdown(f"**Degen:** {st.session_state.username}")
+    st.sidebar.markdown(f"**Sim $DEDU Balance:** {st.session_state.sim_dedu_balance:,.0f}")
+    st.sidebar.markdown(f"**Votes Cast:** {st.session_state.votes_cast}")
 
-# Live Prices
-st.markdown("<h2 style='text-align:center;color:#ff00ff'>📊 LIVE FEED</h2>", unsafe_allow_html=True)
+# Live $DEDU Price for reference (real)
+DEDU_MINT = "AqDGzh4jRZipMrkBuekDXDB1Py2huA8G5xCvrSgmpump"
 try:
-    prices = requests.get("https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,solana,binancecoin&vs_currencies=usd", timeout=10).json()
-    cols = st.columns(4)
-    cols[0].metric("BTC", f"${prices.get('bitcoin',{}).get('usd','N/A'):,}")
-    cols[1].metric("ETH", f"${prices.get('ethereum',{}).get('usd','N/A'):,}")
-    cols[2].metric("SOL", f"${prices.get('solana',{}).get('usd','N/A'):,}")
-    cols[3].metric("BNB", f"${prices.get('binancecoin',{}).get('usd','N/A'):,}")
+    response = requests.get(f"https://api.dexscreener.com/latest/dex/tokens/{DEDU_MINT}").json()
+    if response.get('pairs'):
+        price = float(response['pairs'][0]['priceUsd'])
+        st.sidebar.markdown(f"**Real $DEDU Price:** ${price:.10f}")
+        cost_per_vote = 0.10 / price  # 10 cents in $DEDU
+        st.sidebar.markdown(f"**Cost per Vote (real equiv):** ~{cost_per_vote:.0f} $DEDU")
+    else:
+        st.sidebar.markdown("**Real $DEDU Price:** Loading...")
 except:
-    st.warning("Price feed temporarily rugged 😅 Check CoinGecko")
+    st.sidebar.markdown("**Real $DEDU Price:** Offline")
 
-# $DEDU Token Hub
-st.markdown("<div class='dedu-card'>", unsafe_allow_html=True)
-st.markdown("<h2 style='color:#39ff14'>💜 $DEDU TOKEN HUB</h2>", unsafe_allow_html=True)
-st.markdown("<p style='font-size:1.5rem;color:#ff00ff'>Contract: <code>AqDGzh4jRZipMrkBuekDXDB1Py2huA8G5xCvrSgmpump</code></p>", unsafe_allow_html=True)
-
-# $DEDU Chart
-dedu_df = pd.DataFrame({
-    'Date': pd.date_range(start='2026-01-01', periods=15).strftime('%m-%d'),
-    'Price (USD)': [0.0000048, 0.0000050, 0.0000051, 0.0000052, 0.0000051, 0.0000053, 0.0000054, 0.0000053, 0.0000053, 0.0000053, 0.0000053, 0.0000053, 0.0000053, 0.0000053, 0.0000053],
-    'Holders': [20, 22, 25, 27, 29, 31, 32, 33, 34, 35, 35, 35, 35, 35, 35]
-})
-fig_dedu = px.line(dedu_df, x='Date', y=['Price (USD)', 'Holders'],
-                   color_discrete_map={'Price (USD)': '#ff00ff', 'Holders': '#39ff14'})
-fig_dedu.update_layout(plot_bgcolor='rgba(0,0,0,0)', paper_bgcolor='rgba(0,0,0,0)', font_color='#e0ffe0')
-st.plotly_chart(fig_dedu, use_container_width=True)
-
-st.markdown("<p style='font-size:1.6rem;color:#39ff14'>Buy $DEDU now to vote and ride the wave! 🚀</p>", unsafe_allow_html=True)
-
-# Swap Widget
-st.markdown("<h3 style='color:#ff00ff'>SWAP → $DEDU</h3>", unsafe_allow_html=True)
-st.markdown(f"""
-<jupiter-widget input-mint="So11111111111111111111111111111111111111112" output-mint="AqDGzh4jRZipMrkBuekDXDB1Py2huA8G5xCvrSgmpump" amount="500000000"></jupiter-widget>
-<script type="module" src="https://unpkg.com/@jup-ag/widget-embedded@latest"></script>
-""", unsafe_allow_html=True)
-st.markdown("</div>", unsafe_allow_html=True)
+# 10 Free Test Plays
+if st.session_state.votes_cast < 10:
+    remaining = 10 - st.session_state.votes_cast
+    st.info(f"🎁 You have {remaining} FREE test votes remaining!")
 
 # Markets
 if 'markets' not in st.session_state:
     st.session_state.markets = []
 
-# Funny chart data
-def get_market_chart_data(votes_dict):
-    num_days = 30
-    dates = pd.date_range(end=datetime.today(), periods=num_days).strftime('%m-%d')
-    df = pd.DataFrame({'Date': dates})
-    for option, base in votes_dict.items():
-        growth = [base + i*50 for i in range(num_days)]
-        df[f"{option} 🔥"] = growth
-    return df
+# Leaderboard (real from users)
+if 'leaderboard' not in st.session_state:
+    st.session_state.leaderboard = []
 
-# Admin with secure hash
+# Update leaderboard
+def update_leaderboard():
+    if st.session_state.user_id:
+        # Remove old entry for this user
+        st.session_state.leaderboard = [entry for entry in st.session_state.leaderboard if entry['user_id'] != st.session_state.user_id]
+        # Add updated
+        st.session_state.leaderboard.append({
+            "user_id": st.session_state.user_id,
+            "username": st.session_state.username,
+            "votes": st.session_state.votes_cast
+        })
+        # Sort and keep top 10
+        st.session_state.leaderboard = sorted(st.session_state.leaderboard, key=lambda x: x['votes'], reverse=True)[:10]
+
+# Admin
 with st.sidebar:
-    st.markdown("### 🔐 ADMIN ACCESS")
+    st.markdown("### 🔐 ADMIN")
     pwd = st.text_input("Password", type="password")
     if check_admin_password(pwd):
-        st.success("🔓 Access Granted")
+        st.success("Access Granted")
         with st.form("create_market"):
             question = st.text_input("Question", "Which meme will dominate 2026?")
             options_input = st.text_area("Answers (one per line)", "BONK 🐶\nWIF 🧢\nPEPE 🐸\nPOPCAT 😼")
             date = st.date_input("Voting Ends")
-            submitted = st.form_submit_button("🚀 LAUNCH")
+            submitted = st.form_submit_button("LAUNCH")
             if submitted:
                 options = [o.strip() for o in options_input.split('\n') if o.strip()]
                 if len(options) < 2:
@@ -210,20 +201,28 @@ with st.sidebar:
                         "id": str(uuid.uuid4()),
                         "question": question,
                         "options": options,
-                        "votes": {opt: 10000.0 for opt in options},
+                        "votes": {opt: 0 for opt in options},
                         "resolution_date": str(date),
                         "resolved": False
                     })
                     st.success("Voting live!")
                     st.balloons()
-    elif pwd:
-        st.error("Wrong password 😏")
 
-# Display markets
-st.markdown("<h2 style='text-align:center;color:#ff00ff'>🗳️ ACTIVE VOTING BATTLES</h2>", unsafe_allow_html=True)
+# Display Leaderboard
+st.markdown("<h2 style='text-align:center;color:#39ff14'>🏆 BETA LEADERBOARD</h2>", unsafe_allow_html=True)
+update_leaderboard()
+if st.session_state.leaderboard:
+    for i, entry in enumerate(st.session_state.leaderboard):
+        badge = "👑" if i == 0 else "💎" if i == 1 else "🥉" if i == 2 else "🔥"
+        st.markdown(f"**{i+1}.** {entry['username']} — {entry['votes']} votes {badge}")
+else:
+    st.info("No votes yet. Be the first degen!")
+
+# Markets
+st.markdown("<h2 style='text-align:center;color:#ff00ff'>🗳️ BETA VOTING BATTLES</h2>", unsafe_allow_html=True)
 
 if not st.session_state.markets:
-    st.info("No battles yet. Admin loading...")
+    st.info("No battles yet. Admin launching soon...")
 else:
     for market in st.session_state.markets:
         with st.container():
@@ -231,35 +230,42 @@ else:
             st.markdown(f"<h3 style='text-align:center;color:#00ffff'>{market['question']}</h3>", unsafe_allow_html=True)
             st.markdown(f"<p style='text-align:center;color:#ff00ff'>Ends: {market['resolution_date']}</p>", unsafe_allow_html=True)
 
-            # Multi-line chart
-            chart_df = get_market_chart_data(market['votes'])
-            fig = px.line(chart_df, x='Date', y=chart_df.columns[1:])
-            fig.update_layout(plot_bgcolor='rgba(0,0,0,0)', paper_bgcolor='rgba(0,0,0,0)', font_color='#e0ffe0', legend_title="Option")
-            st.plotly_chart(fig, use_container_width=True)
-
-            total = sum(market['votes'].values())
+            total_votes = sum(market['votes'].values())
             cols = st.columns(len(market['options']))
             for idx, opt in enumerate(market['options']):
                 with cols[idx]:
-                    perc = (market['votes'][opt] / total * 100) if total > 0 else 0
+                    perc = (market['votes'][opt] / total_votes * 100) if total_votes > 0 else 0
                     st.markdown(f"<h2 style='text-align:center;color:#39ff14'>{opt}<br>{perc:.1f}%</h2>", unsafe_allow_html=True)
+                    vote_cost = 10000  # Simulated cost in sim $DEDU
                     if st.button(f"🗳️ VOTE {opt}", key=f"vote_{market['id']}_{idx}", use_container_width=True):
-                        if st.session_state.wallet:
-                            market['votes'][opt] += 100
-                            st.success(f"Voted {opt}! 🔥")
+                        if st.session_state.sim_dedu_balance >= vote_cost or st.session_state.votes_cast < 10:
+                            market['votes'][opt] += 1
+                            st.session_state.votes_cast += 1
+                            if st.session_state.votes_cast <= 10:
+                                st.success(f"Free test vote used! Voted {opt} 🔥")
+                            else:
+                                st.session_state.sim_dedu_balance -= vote_cost
+                                st.success(f"Voted {opt}! (-10,000 sim $DEDU)")
                             st.balloons()
+                            update_leaderboard()
+                            st.rerun()
                         else:
-                            st.warning("Connect wallet to vote")
-
-            # Share
-            share_text = f"Pre-DICKTOR Vote: {market['question']} | Join now! 🗳️🍆"
-            twitter_url = f"https://twitter.com/intent/tweet?text={requests.utils.quote(share_text)}"
-            st.markdown(f'<a href="{twitter_url}" target="_blank"><button class="share-btn" style="width:100%;margin-top:20px">📤 SHARE BATTLE</button></a>', unsafe_allow_html=True)
+                            st.error("Not enough simulated $DEDU! Wait for more free votes or reset.")
 
             st.markdown("</div>", unsafe_allow_html=True)
+
+# Reset Button for Testing
+if st.button("🔄 RESET MY BETA ACCOUNT (for testing)"):
+    st.session_state.user_id = None
+    st.session_state.sim_dedu_balance = 0
+    st.session_state.votes_cast = 0
+    st.rerun()
 
 # Footer
 st.markdown("""
 <div style='text-align:center;margin-top:60px;padding:40px;background:rgba(0,10,30,0.6);border:2px solid #39ff14;border-radius:20px'>
-    <h2 style='color:#ff00ff'>Pre-DICKTOR v2.0</h2>
-    <p style='color:#39ff14'>$DEDU Powered | Community Votes | WAGMI 
+    <h2 style='color:#ff00ff'>Pre-DICKTOR Beta</h2>
+    <p style='color:#39ff14'>Simulator Mode | 1M sim $DEDU per user | 10 free votes | Real leaderboard</p>
+    <p style='color:#b0ffb0'>Feedback welcome — help us build the ultimate degen voting platform!</p>
+</div>
+""", unsafe_allow_html=True)
